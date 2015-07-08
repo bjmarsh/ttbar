@@ -111,16 +111,6 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1) {
             CMS3::progress( nEventsTotal, nEventsChain );            
 
             /******** Analysis Code *********/
-
-            int nElecTotal = els_p4().size();
-            int nMuonTotal = mus_p4().size();
-
-            for(int i=0; i<nElecTotal; i++){
-                leppt->Fill(els_p4()[i].Pt());
-            }
-            for(int i=0; i<nMuonTotal; i++){
-                leppt->Fill(mus_p4()[i].Pt());
-            }
             
             bool isEnoughMET = (evt_pfmet()>30);
 
@@ -198,8 +188,44 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1) {
             if(!isEnoughMET)
                 continue;
 
+            int nElecTotal = els_p4().size();
+            int nMuonTotal = mus_p4().size();
+
+            for(int i=0; i<nElecTotal; i++){
+                leppt->Fill(els_p4()[i].Pt());
+            }
+            for(int i=0; i<nMuonTotal; i++){
+                leppt->Fill(mus_p4()[i].Pt());
+            }
+
+
             mLL->Fill((hyp_ll_p4()[besthyp]+hyp_lt_p4()[besthyp]).M(), scale);          
             HT->Fill(h_t, scale);
+            
+            for(int i=0; i<njetstotal; i++){
+
+                bool isBtag = (pfjets_pfCombinedInclusiveSecondaryVertexV2BJetTag()[i] > 0.814);
+                
+                double jetEta = pfjets_p4()[i].Eta();
+                double jetPhi = pfjets_p4()[i].Phi();
+                double l1Eta = hyp_ll_p4()[besthyp].Eta();
+                double l2Eta = hyp_lt_p4()[besthyp].Eta();
+                double l1Phi = hyp_ll_p4()[besthyp].Phi();
+                double l2Phi = hyp_lt_p4()[besthyp].Phi();
+                double dR1 = sqrt((jetEta-l1Eta)*(jetEta-l1Eta)+(jetPhi-l1Phi)*(jetPhi-l1Phi));
+                double dR2 = sqrt((jetEta-l2Eta)*(jetEta-l2Eta)+(jetPhi-l2Phi)*(jetPhi-l2Phi));
+                if(dR1 < 0.4 || dR2 < 0.4)
+                    continue;
+
+                if(fabs(pfjets_p4()[i].Eta()) > 2.4)
+                    continue;
+
+                jetpt->Fill(pfjets_p4()[i].Pt(), scale);
+                if(isBtag)
+                    bjetpt->Fill(pfjets_p4()[i].Pt(), scale);                
+
+            }
+
 
         }
   
