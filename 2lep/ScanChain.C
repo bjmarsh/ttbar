@@ -135,8 +135,6 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1) {
                 }
                 
             }
-            if(ngoodhyps==0)
-                continue;
 
             int njetstotal = pfjets_p4().size();
             int ngoodjets = 0;
@@ -157,9 +155,6 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1) {
                 if(dR1 < 0.4 || dR2 < 0.4)
                     continue;
 
-                jetpt->Fill(pfjets_p4()[i].Pt(), scale);
-                if(isBtag)
-                    bjetpt->Fill(pfjets_p4()[i].Pt(), scale);                
 
                 if(pfjets_p4()[i].Pt() < 40)
                     continue;
@@ -173,17 +168,13 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1) {
                 h_t += pfjets_p4()[i].Pt();
             }
 
-            if(isEnoughMET){
+            if(isEnoughMET && ngoodhyps>0){
                 njets->Fill(ngoodjets, scale);
                 nbtags->Fill(ngoodbtags, scale);
             }
 
-            if(ngoodjets < 2)
-                continue;
-            if(ngoodbtags < 1)
-                continue;
-
-            pfmet->Fill(evt_pfmet(), scale);
+            if(ngoodhyps>0 && ngoodjets>=2 && ngoodbtags>=1)
+                pfmet->Fill(evt_pfmet(), scale);
 
             if(!isEnoughMET)
                 continue;
@@ -191,16 +182,17 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1) {
             int nElecTotal = els_p4().size();
             int nMuonTotal = mus_p4().size();
 
-            for(int i=0; i<nElecTotal; i++){
-                leppt->Fill(els_p4()[i].Pt());
-            }
-            for(int i=0; i<nMuonTotal; i++){
-                leppt->Fill(mus_p4()[i].Pt());
+            if(ngoodjets>=2 && ngoodbtags>=1){
+                for(int i=0; i<nElecTotal; i++){
+                    leppt->Fill(els_p4()[i].Pt());
+                }
+                for(int i=0; i<nMuonTotal; i++){
+                    leppt->Fill(mus_p4()[i].Pt());
+                }
             }
 
-
-            mLL->Fill((hyp_ll_p4()[besthyp]+hyp_lt_p4()[besthyp]).M(), scale);          
-            HT->Fill(h_t, scale);
+            if(ngoodhyps==0)
+                continue;
             
             for(int i=0; i<njetstotal; i++){
 
@@ -226,6 +218,12 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1) {
 
             }
 
+            if(ngoodjets<2 || ngoodbtags<1)
+                continue;
+
+            mLL->Fill((hyp_ll_p4()[besthyp]+hyp_lt_p4()[besthyp]).M(), scale);          
+            HT->Fill(h_t, scale);
+            
 
         }
   
